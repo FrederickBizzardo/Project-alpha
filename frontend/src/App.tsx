@@ -33,6 +33,39 @@ const SUGGESTIONS = [
   "What are some minimalistic home decor ideas?"
 ];
 
+const CodeBlock = ({ node, className, children, ...props }: any) => {
+  const isInline = !className;
+  const code = String(children).replace(/\n$/, '');
+  
+  if (isInline) {
+    return <code className="bg-white/10 px-1.5 py-0.5 rounded text-sm font-mono text-blue-300">{children}</code>;
+  }
+
+  return (
+    <div className="relative group my-4 rounded-xl bg-[#0f0f12] border border-white/10 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 bg-white/5">
+        <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+          {className?.replace('language-', '') || 'text'}
+        </span>
+        <button 
+          onClick={() => {
+            navigator.clipboard.writeText(code);
+            alert("Code copied!");
+          }} 
+          className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-white transition-colors"
+        >
+          <Copy size={12} /> Copy
+        </button>
+      </div>
+      <div className="p-4 overflow-x-auto">
+        <pre className="text-[13px] text-gray-300 font-mono leading-relaxed">
+          <code>{children}</code>
+        </pre>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
@@ -190,8 +223,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#09090b] text-[#fafafa] font-sans selection:bg-blue-500/30 overflow-hidden">
-      {/* Sidebar Overlay for Mobile */}
+      <div className="flex h-screen bg-[#09090b] text-[#fafafa] font-sans selection:bg-blue-500/30 overflow-hidden">      {/* Sidebar Overlay for Mobile */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden"
@@ -335,8 +367,13 @@ function App() {
                           <p className="whitespace-pre-wrap">{msg?.content || ""}</p>
                         ) : (
                           <div className="prose prose-invert prose-sm max-w-none">
-                            <ReactMarkdown>{msg?.content || ""}</ReactMarkdown>
-                            <button onClick={() => copyToClipboard(msg?.content || "")} className="flex items-center gap-1.5 text-[10px] mt-4 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-white"><Copy size={12} /> Copy</button>
+                            <ReactMarkdown components={{ code: CodeBlock }}>{msg?.content || ""}</ReactMarkdown>
+                            <button 
+                              onClick={() => copyToClipboard(msg?.content || "")} 
+                              className="flex items-center gap-1.5 text-[11px] mt-4 opacity-50 hover:opacity-100 transition-opacity text-gray-500 hover:text-white"
+                            >
+                              <Copy size={12} /> Copy Entire Message
+                            </button>
                           </div>
                         )}
                       </div>
