@@ -17,7 +17,7 @@ from typing import List, Optional
 load_dotenv()
 
 # Database setup
-DATABASE_URL = "sqlite+aiosqlite:///./project_alpha.db"
+DATABASE_URL = "sqlite+aiosqlite:////tmp/project_alpha.db"
 Base = declarative_base()
 
 class Chat(Base):
@@ -87,7 +87,7 @@ class ChatRequest(BaseModel):
     provider: str = "auto"
     chat_id: Optional[int] = None
 
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {
         "status": "ok", 

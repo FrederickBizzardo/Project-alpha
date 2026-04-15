@@ -114,7 +114,7 @@ function App() {
 
   const checkHealth = async () => {
     try {
-      const res = await fetch(`${API_BASE}/health`)
+      const res = await fetch(`${API_BASE}/api/health`)
       const data = await res.json()
       setHealth({ ollama: data.ollama_online, groq: data.groq_ready })
     } catch { /* silent */ }
