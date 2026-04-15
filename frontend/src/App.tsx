@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { 
   Plus, MessageSquare, Trash2, Edit2, Check, X, 
   Menu, Copy, Globe, Cpu, Cloud, Settings, 
@@ -32,6 +34,54 @@ const SUGGESTIONS = [
   "Help me brainstorm names for a new tech startup",
   "What are some minimalistic home decor ideas?"
 ];
+
+const CodeBlock = ({ node, className, children, ...props }: any) => {
+  const isInline = !className;
+  const code = String(children).replace(/\n$/, '');
+  
+  if (isInline) {
+    return <code className="bg-white/10 px-1.5 py-0.5 rounded text-sm font-mono text-blue-300">{children}</code>;
+  }
+
+  return (
+    <div className="relative group my-4 rounded-xl bg-[#0f0f12] border border-white/10 overflow-hidden w-full">
+      <div className="flex items-center justify-between px-4 py-2 bg-white/5">
+        <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+          {className?.replace('language-', '') || 'text'}
+        </span>
+        <button 
+          onClick={() => {
+            navigator.clipboard.writeText(code);
+            alert("Code copied!");
+          }} 
+          className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-white transition-colors"
+        >
+          <Copy size={12} /> Copy
+        </button>
+      </div>
+      <div className="overflow-x-auto custom-scrollbar">
+        <SyntaxHighlighter
+          language={className?.replace('language-', '') || 'text'}
+          style={vscDarkPlus}
+          customStyle={{
+            margin: 0,
+            padding: '1.25rem',
+            fontSize: '13px',
+            lineHeight: '1.6',
+            background: 'transparent',
+          }}
+          codeTagProps={{
+            style: {
+              fontFamily: 'inherit',
+            }
+          }}
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  );
+};
 
 function App() {
   const [prompt, setPrompt] = useState('')
@@ -190,8 +240,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#09090b] text-[#fafafa] font-sans selection:bg-blue-500/30 overflow-hidden">
-      {/* Sidebar Overlay for Mobile */}
+      <div className="flex h-screen bg-[#09090b] text-[#fafafa] font-sans selection:bg-blue-500/30 overflow-hidden">      {/* Sidebar Overlay for Mobile */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden"
@@ -326,17 +375,22 @@ function App() {
               <div className="space-y-10 pb-10">
                 {(messages || []).map((msg, idx) => (
                   <div key={idx} className={cn("flex flex-col animate-in fade-in duration-300", msg?.role === 'user' ? "items-end" : "items-start")}>
-                    <div className={cn("flex gap-4 max-w-[95%] sm:max-w-[85%]", msg?.role === 'user' ? "flex-row-reverse" : "flex-row")}>
+                    <div className={cn("flex gap-3 md:gap-4 max-w-[95%] sm:max-w-[85%] w-full", msg?.role === 'user' ? "flex-row-reverse" : "flex-row")}>
                       {msg?.role === 'assistant' && (
                         <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-xs mt-1 shadow-lg shadow-blue-600/10">A</div>
                       )}
-                      <div className={cn("relative group px-5 py-3 rounded-2xl leading-relaxed text-[15px]", msg?.role === 'user' ? "bg-blue-600 text-white shadow-xl shadow-blue-600/5" : "bg-white/[0.03] border border-white/[0.05] text-gray-200")}>
+                      <div className={cn("relative group px-5 py-3 rounded-2xl leading-relaxed text-[15px] min-w-0 break-words", msg?.role === 'user' ? "bg-blue-600 text-white shadow-xl shadow-blue-600/5" : "bg-white/[0.03] border border-white/[0.05] text-gray-200")}>
                         {msg?.role === 'user' ? (
                           <p className="whitespace-pre-wrap">{msg?.content || ""}</p>
                         ) : (
                           <div className="prose prose-invert prose-sm max-w-none">
-                            <ReactMarkdown>{msg?.content || ""}</ReactMarkdown>
-                            <button onClick={() => copyToClipboard(msg?.content || "")} className="flex items-center gap-1.5 text-[10px] mt-4 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-white"><Copy size={12} /> Copy</button>
+                            <ReactMarkdown components={{ code: CodeBlock }}>{msg?.content || ""}</ReactMarkdown>
+                            <button 
+                              onClick={() => copyToClipboard(msg?.content || "")} 
+                              className="flex items-center gap-1.5 text-[11px] mt-4 opacity-50 hover:opacity-100 transition-opacity text-gray-500 hover:text-white"
+                            >
+                              <Copy size={12} /> Copy Entire Message
+                            </button>
                           </div>
                         )}
                       </div>
@@ -344,11 +398,13 @@ function App() {
                   </div>
                 ))}
                 {currentResponse && (
-                  <div className="flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-xs mt-1 shadow-lg shadow-blue-600/10">A</div>
-                    <div className="bg-white/[0.03] border border-white/[0.05] px-5 py-3 rounded-2xl prose prose-invert prose-sm max-w-none text-gray-200 text-[15px] leading-[1.7] relative">
-                      <ReactMarkdown>{currentResponse || ""}</ReactMarkdown>
-                      <span className="inline-block w-2.5 h-4.5 ml-1 bg-white/70 animate-[pulse_0.8s_infinite] align-middle rounded-sm shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
+                  <div className="flex flex-col items-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex gap-3 md:gap-4 max-w-[95%] sm:max-w-[85%] w-full flex-row">
+                      <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-xs mt-1 shadow-lg shadow-blue-600/10">A</div>
+                      <div className="bg-white/[0.03] border border-white/[0.05] px-5 py-3 rounded-2xl prose prose-invert prose-sm max-w-none text-gray-200 text-[15px] leading-[1.7] relative min-w-0 break-words flex-1">
+                        <ReactMarkdown components={{ code: CodeBlock }}>{currentResponse || ""}</ReactMarkdown>
+                        <span className="inline-block w-2.5 h-4.5 ml-1 bg-white/70 animate-[pulse_0.8s_infinite] align-middle rounded-sm shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
+                      </div>
                     </div>
                   </div>
                 )}
