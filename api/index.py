@@ -17,7 +17,7 @@ from typing import List, Optional
 load_dotenv()
 
 # Database setup
-DATABASE_URL = "sqlite+aiosqlite:////tmp/project_alpha.db"
+DATABASE_URL = "sqlite+aiosqlite:///./project_alpha.db"
 Base = declarative_base()
 
 class Chat(Base):
@@ -62,6 +62,7 @@ async def lifespan(app: FastAPI):
             await app.state.client.post(
                 f"{OLLAMA_URL}/api/generate",
                 json={"model": "llama3.2:1b", "prompt": "", "keep_alive": -1}
+                # json={"model": "gemma4:31b-cloud", "prompt": "", "keep_alive": -1}
             )
             app.state.ollama_online = True
         else:
