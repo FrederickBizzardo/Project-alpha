@@ -17,7 +17,12 @@ from typing import List, Optional
 load_dotenv()
 
 # Database setup
-DATABASE_URL = "sqlite+aiosqlite:///./project_alpha.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./project_alpha.db")
+
+# Handle Vercel's read-only filesystem
+if os.getenv("VERCEL") and DATABASE_URL.startswith("sqlite"):
+    DATABASE_URL = "sqlite+aiosqlite:////tmp/project_alpha.db"
+
 Base = declarative_base()
 
 class Chat(Base):
